@@ -22,7 +22,15 @@ export default function LoginPage() {
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      router.replace(data.user?.app_metadata?.role === "admin" || data.user?.app_metadata?.role === "editor" ? "/admin" : "/");
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+
+      router.replace(profile?.role === "admin" || profile?.role === "editor" ? "/admin" : "/");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Login gagal. Periksa email dan password.");
