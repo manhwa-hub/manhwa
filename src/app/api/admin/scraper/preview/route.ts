@@ -58,14 +58,16 @@ function decode(value: string) {
 }
 
 function meta(html: string, key: string) {
-  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const patterns = [
-    new RegExp('<meta\\s+[^>]*(?:property|name)=["\\']' + escaped + '["\\'][^>]*content=["\\']([^"\\']*)["\\'][^>]*>', "i"),
-    new RegExp('<meta\\s+[^>]*content=["\\']([^"\\']*)["\\'][^>]*(?:property|name)=["\\']' + escaped + '["\\'][^>]*>', "i"),
-  ];
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (match?.[1]) return decode(match[1]);
+  const tags = html.match(/<meta\\b[^>]*>/gi) || [];
+  for (const tag of tags) {
+    const attributes: Record<string, string> = {};
+    const attributePattern = /([a-zA-Z:-]+)\\s*=\\s*(?:"([^"]*)"|'([^']*)')/g;
+    for (const match of tag.matchAll(attributePattern)) {
+      attributes[match[1].toLowerCase()] = decode(match[2] ?? match[3] ?? "");
+    }
+    if ((attributes.property || attributes.name || "").toLowerCase() === key.toLowerCase()) {
+      return attributes.content || "";
+    }
   }
   return "";
 }
