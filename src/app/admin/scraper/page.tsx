@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth/staff";
 import ScraperPreviewForm from "./scraper-preview-form";
+import SourceRightsControl from "./source-rights-control";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ export default async function AdminScraperPage() {
               <p className="text-xs text-white/45">{source.source_name}</p>
               <a href={source.canonical_url} target="_blank" rel="noreferrer" className="block break-all text-xs text-[#b6f36b] underline">{source.canonical_url}</a>
               <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/65">{rightsLabels[source.rights_status] || rightsLabels.unverified}</span>
+                <SourceRightsControl id={source.id} initialStatus={source.rights_status} />
                 <span className="text-xs text-white/30">{new Date(source.created_at).toLocaleString("id-ID")}</span>
               </div>
             </article>
