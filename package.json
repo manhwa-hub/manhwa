@@ -10,7 +10,7 @@
     "lint": "pnpm -r lint",
     "build:frontend": "pnpm -C packages/frontend build",
     "build:backend": "pnpm -C packages/backend build"
-  }
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",
     "@aws-sdk/s3-request-presigner": "^3.883.0",
