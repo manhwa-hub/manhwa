@@ -17,11 +17,14 @@ export default function ScraperPreviewForm() {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedMessage, setSavedMessage] = useState("");
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError("");
+    setSavedMessage("");
     setPreview(null);
     try {
       const response = await fetch("/api/admin/scraper/preview", {
@@ -36,6 +39,32 @@ export default function ScraperPreviewForm() {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function saveSource() {
+    if (!preview) return;
+    setSaving(true);
+    setError("");
+    setSavedMessage("");
+    try {
+      const response = await fetch("/api/admin/scraper/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceUrl: preview.sourceUrl,
+          canonicalUrl: preview.canonicalUrl,
+          sourceName: preview.sourceName,
+          title: preview.title,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Gagal menyimpan sumber.");
+      setSavedMessage(result.message || "Sumber berhasil disimpan.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan saat menyimpan.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -79,6 +108,10 @@ export default function ScraperPreviewForm() {
             {preview.coverUrl && <div><dt className="text-xs text-white/40">URL cover</dt><dd className="mt-1 break-all text-white/70">{preview.coverUrl}</dd></div>}
           </dl>
           <p className="mt-5 rounded-xl border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100/80">{preview.note}</p>
+          <button type="button" onClick={saveSource} disabled={saving} className="mt-4 rounded-xl border border-[#b6f36b]/30 bg-[#b6f36b]/10 px-5 py-3 text-sm font-bold text-[#c8ff91] disabled:opacity-50">
+            {saving ? "Menyimpan..." : "Simpan catatan sumber"}
+          </button>
+          {savedMessage && <p role="status" className="mt-3 text-sm text-[#c8ff91]">{savedMessage}</p>}
         </section>
       )}
     </div>
