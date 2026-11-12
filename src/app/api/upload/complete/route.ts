@@ -19,7 +19,9 @@ export async function POST(request: Request) {
     const supabase = await createSupabaseServerClient();
     if (!supabase) return NextResponse.json({ error: "Supabase belum dikonfigurasi." }, { status: 503 });
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !["admin", "editor"].includes(user.app_metadata?.role)) {
+    if (!user) return NextResponse.json({ error: "Tidak memiliki izin." }, { status: 403 });
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    if (!profile || !["admin", "editor"].includes(profile.role)) {
       return NextResponse.json({ error: "Tidak memiliki izin." }, { status: 403 });
     }
 
