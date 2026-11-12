@@ -5,30 +5,21 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth/staff";
 
-const genreSchema = z.object({
+const schema = z.object({
   name: z.string().trim().min(1).max(60),
   slug: z.string().trim().min(1).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  description: z.string().trim().max(500).optional(),
 });
 
 export async function saveGenre(formData: FormData) {
   const { supabase } = await requireStaff();
   const id = String(formData.get("id") ?? "");
-  const parsed = genreSchema.safeParse({
-    name: formData.get("name"),
-    slug: formData.get("slug"),
-    description: formData.get("description") || undefined,
-  });
+  const parsed = schema.safeParse({ name: formData.get("name"), slug: formData.get("slug") });
   if (!parsed.success) redirect("/admin/genres?error=invalid");
-
-  const values = { ...parsed.data, description: parsed.data.description || null };
   const result = id
-    ? await supabase.from("genres").update(values).eq("id", id)
-    : await supabase.from("genres").insert(values);
-
+    ? await supabase.from("genres").update(parsed.data).eq("id", id)
+    : await supabase.from("genres").insert(parsed.data);
   if (result.error) redirect("/admin/genres?error=" + encodeURIComponent(result.error.message));
-  revalidatePath("/admin/genres");
-  revalidatePath("/catalog");
+  revalidatePath("/admin/genres"); revalidatePath("/catalog");
   redirect("/admin/genres?saved=1");
 }
 
