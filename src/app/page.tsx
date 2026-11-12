@@ -22,6 +22,7 @@ export default async function HomePage() {
   let popular: Comic[] = [];
   let genres: { name: string; slug: string }[] = [];
   let dataError = false;
+  let announcement = "";
   if (supabase) {
     const [latestResult, popularResult, genreResult, settingsResult] = await Promise.all([
       supabase.from("manhwa").select("id,title,slug,cover_url,status,type,views,created_at").eq("publication_status", "published").order("created_at", { ascending: false }).limit(12),
@@ -34,11 +35,11 @@ export default async function HomePage() {
     genres = genreResult.data ?? [];
     dataError = Boolean(latestResult.error || popularResult.error || genreResult.error);
     const settingValue = settingsResult.data?.value as { text?: string } | null;
-    var announcement = settingValue?.text?.trim() ?? "";
+    announcement = settingValue?.text?.trim() ?? "";
   }
 
   return <main className="min-h-screen overflow-hidden bg-[#090b10] text-white">
-    {typeof announcement !== "undefined" && announcement && <div className="border-b border-[#b6f36b]/20 bg-[#b6f36b]/10 px-5 py-3 text-center text-sm text-[#d8ffb2]">{announcement}</div>}
+    {announcement && <div className="border-b border-[#b6f36b]/20 bg-[#b6f36b]/10 px-5 py-3 text-center text-sm text-[#d8ffb2]">{announcement}</div>}
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#090b10]/85 backdrop-blur-xl"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
       <Link href="/" className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#b6f36b] text-[#090b10]"><BookOpen size={21}/></span><span className="text-lg font-black tracking-tight">MANHWA<span className="text-[#b6f36b]">HUB</span></span></Link>
       <nav className="hidden items-center gap-8 text-sm text-white/65 md:flex"><Link href="/" className="text-white">Beranda</Link><Link href="/catalog" className="hover:text-white">Katalog</Link><a href="#genre" className="hover:text-white">Genre</a></nav>
