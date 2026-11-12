@@ -18,25 +18,53 @@ const schema = z.object({
   release_year: z.number().int().min(1900).max(2100).nullable(),
 });
 
+function parseManhwa(formData: FormData) {
+  const rawYear = String(formData.get("release_year") ?? "").trim();
+  return schema.safeParse({
+    title: formData.get("title"),
+    slug: formData.get("slug"),
+    alternative_title: String(formData.get("alternative_title") ?? ""),
+    synopsis: String(formData.get("synopsis") ?? ""),
+    cover_url: String(formData.get("cover_url") ?? ""),
+    status: formData.get("status"),
+    type: formData.get("type"),
+    author: String(formData.get("author") ?? ""),
+    artist: String(formData.get("artist") ?? ""),
+    release_year: rawYear ? Number(rawYear) : null,
+  });
+}
+
 function refresh(slug?: string) {
-  revalidatePath("/"); revalidatePath("/catalog"); revalidatePath("/admin/manhwa");
+  revalidatePath("/");
+  revalidatePath("/catalog");
+  revalidatePath("/admin/manhwa");
   if (slug) revalidatePath("/manhwa/" + slug);
+}
+
+export async function createManhwa(formData: FormData) {
+  const { supabase } = await requireStaff();
+  const parsed = parseManhwa(formData);
+  if (!parsed.success) redirect("/admin/manhwa?error=invalid");
+
+  const { error } = await supabase.from("manhwa").insert({
+    ...parsed.data,
+    alternative_title: parsed.data.alternative_title || null,
+    synopsis: parsed.data.synopsis || null,
+    cover_url: parsed.data.cover_url || null,
+    author: parsed.data.author || null,
+    artist: parsed.data.artist || null,
+    publication_status: "draft",
+  });
+  if (error) redirect("/admin/manhwa?error=" + encodeURIComponent(error.message));
+  refresh(parsed.data.slug);
+  redirect("/admin/manhwa?created=1");
 }
 
 export async function updateManhwa(formData: FormData) {
   const { supabase } = await requireStaff();
   const id = String(formData.get("id") ?? "");
   if (!z.string().uuid().safeParse(id).success) redirect("/admin/manhwa?error=invalid-id");
-  const rawYear = String(formData.get("release_year") ?? "").trim();
-  const parsed = schema.safeParse({
-    title: formData.get("title"), slug: formData.get("slug"),
-    alternative_title: String(formData.get("alternative_title") ?? ""),
-    synopsis: String(formData.get("synopsis") ?? ""),
-    cover_url: String(formData.get("cover_url") ?? ""),
-    status: formData.get("status"), type: formData.get("type"),
-    author: String(formData.get("author") ?? ""), artist: String(formData.get("artist") ?? ""),
-    release_year: rawYear ? Number(rawYear) : null,
-  });
+  const parsed = parseManhwa(formData);
   if (!parsed.success) redirect("/admin/manhwa/" + id + "?error=invalid");
   const genreIds = [...new Set(formData.getAll("genre_ids").map(String))];
   if (genreIds.some((value) => !z.string().uuid().safeParse(value).success)) {
@@ -58,7 +86,8 @@ export async function updateManhwa(formData: FormData) {
     const { error: insertError } = await supabase.from("manhwa_genres").insert(genreIds.map((genre_id) => ({ manhwa_id: id, genre_id })));
     if (insertError) redirect("/admin/manhwa/" + id + "?error=" + encodeURIComponent("Data utama tersimpan, tetapi genre gagal disimpan: " + insertError.message));
   }
-  refresh(existing?.slug); refresh(parsed.data.slug);
+  refresh(existing?.slug);
+  refresh(parsed.data.slug);
   redirect("/admin/manhwa/" + id + "?saved=1");
 }
 
