@@ -32,7 +32,7 @@ export default async function AdminChaptersPage({ searchParams }: Props) {
     <div className="mt-8 space-y-3">
       {(chapters ?? []).map((chapter: any) => <div key={chapter.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#121620] p-4">
         <div><p className="font-semibold">{chapter.manhwa?.title ?? "Manhwa"} — Chapter {chapter.chapter_number}</p><p className="mt-1 text-xs text-white/40">{chapter.title ?? "Tanpa judul"} · {chapter.status}</p></div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2"><Link href={`/admin/chapters/${chapter.id}/images`} className="rounded-lg border border-[#b6f36b]/30 px-3 py-2 text-xs text-[#c8ff91]">Upload halaman</Link>
           <form action={updateChapterStatus} className="flex gap-2"><input type="hidden" name="id" value={chapter.id}/><select name="status" defaultValue={chapter.status} className="rounded-lg border border-white/10 bg-[#090b10] px-2 py-2 text-xs"><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option></select><button className="rounded-lg border border-white/15 px-3 py-2 text-xs">Ubah</button></form>
           {role === "admin" && <form action={deleteChapter}><input type="hidden" name="id" value={chapter.id}/><button className="rounded-lg border border-red-400/30 px-3 py-2 text-xs text-red-300">Hapus</button></form>}
         </div>
