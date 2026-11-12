@@ -26,9 +26,16 @@ export async function middleware(request: NextRequest) {
 
   if (request.nextUrl.pathname.startsWith("/admin")) {
     const { data: { user } } = await supabase.auth.getUser();
-    const role = user?.app_metadata?.role;
-    if (!user || !["admin", "editor"].includes(role)) {
-      return NextResponse.redirect(new URL(user ? "/" : "/login", request.url));
+    if (!user) return NextResponse.redirect(new URL("/login", request.url));
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!profile || !["admin", "editor"].includes(profile.role)) {
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
   return response;
