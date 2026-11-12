@@ -5,13 +5,6 @@ import SourceRightsControl from "./source-rights-control";
 
 export const dynamic = "force-dynamic";
 
-const rightsLabels: Record<string, string> = {
-  unverified: "Belum diverifikasi",
-  authorized: "Diizinkan / berlisensi",
-  original: "Karya sendiri",
-  do_not_publish: "Jangan diterbitkan",
-};
-
 export default async function AdminScraperPage() {
   const { supabase } = await requireStaff();
   const { data: sources, error } = await supabase
